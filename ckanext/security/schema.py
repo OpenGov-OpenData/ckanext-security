@@ -20,15 +20,13 @@ def default_user_schema():
     schema = {
         'id': [ignore_missing, six.text_type],
         'name': [not_empty, name_validator, user_name_validator,
-                 six.text_type],
-        'fullname': [ignore_missing, six.text_type],
-        'password': [validators.user_password_validator,
-                     user_password_not_empty,
+                 validators.user_name_sanitize, six.text_type],
+        'fullname': [ignore_missing, validators.user_name_sanitize, six.text_type],
+        'password': [validators.user_password_validator, user_password_not_empty,
                      ignore_missing, six.text_type],
-        'password_hash': [ignore_missing, ignore_not_sysadmin,
-                          six.text_type],
+        'password_hash': [ignore_missing, ignore_not_sysadmin, six.text_type],
         'email': [not_empty, six.text_type],
-        'about': [ignore_missing, user_about_validator, six.text_type],
+        'about': [ignore_missing, user_about_validator, validators.user_about_validator, six.text_type],
         'created': [ignore],
         'openid': [ignore_missing],
         'sysadmin': [ignore_missing, ignore_not_sysadmin],
@@ -73,3 +71,4 @@ def default_update_user_schema():
                           ignore_missing, six.text_type]
 
     return schema
+

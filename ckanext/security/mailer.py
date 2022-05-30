@@ -4,7 +4,10 @@ import codecs
 import logging
 import six
 
-from ckan.common import config, is_flask_request
+try:
+    from ckan.common import config
+except ImportError:
+    from pylons import config, is_flask_request
 from ckan.lib.base import render_jinja2, render
 from ckan.lib.mailer import get_reset_link_body, mail_user
 from ckan.plugins import toolkit as tk
@@ -36,7 +39,7 @@ def send_reset_link(user):
             'emails/reset_password_subject.txt', extra_vars)
     else:
         subject = render_jinja2(
-            'emails/reset_password_subject.txt', extra_vars)
+            'security/emails/reset_password_subject.txt', extra_vars)
 
     # Make sure we only use the first line
     subject = subject.split('\n')[0]

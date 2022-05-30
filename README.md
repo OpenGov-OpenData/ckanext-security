@@ -4,12 +4,16 @@
 A CKAN extension to hold various security improvements for CKAN, including:
 
 * Stronger password reset tokens
+* Uses any 2 character sets for password validations.The character sets are uppercase characters, lowercase characters, digits, and special characters.
 * Brute force protection
 * Removed ability to change usernames after signup
 * Server-side session storage
 * Session invalidation on logout
 * Stronger password validators (NZISM compatible)
 * When users try to reset a password for an email address, CKAN will no longer
+disclose whether or not that email address exists in the DB.
+* Hide user profiles and user list from users not logged in
+* Check for profanity and sensitive words, like "hack", in usernames and user descriptions.
 disclose whether or not that email address exists in the DB
 * Two Factor Authentication is enforced for all users
 * Preventing upload/linking of certain file types for resources

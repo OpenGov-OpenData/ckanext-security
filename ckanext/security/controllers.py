@@ -99,7 +99,9 @@ class SecureUserController(UserController):
                         get_action('user_show')(context, data_dict)
                         user_obj = context['user_obj']
 
-            helpers.flash_success(_('A reset token has been sent.'))
             if user_obj:
                 mailer.send_reset_link(user_obj)
+            helpers.flash_success(_('Please check your inbox for a reset code.'))
+            helpers.redirect_to('/')
+
         return render('user/request_reset.html')
