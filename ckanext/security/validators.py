@@ -1,3 +1,5 @@
+# encoding: utf-8
+import six
 import string
 import re
 
@@ -5,7 +7,6 @@ from ckan import authz
 from ckan.common import _
 from ckan.lib.navl.dictization_functions import Missing, Invalid
 from profanityfilter import ProfanityFilter
-
 
 MIN_PASSWORD_LENGTH = 10
 MIN_RULE_SETS = 2
@@ -21,7 +22,7 @@ def user_password_validator(key, data, errors, context):
 
     if isinstance(value, Missing):
         pass  # Already handeled in core
-    elif not isinstance(value, basestring):
+    elif not isinstance(value, six.string_types):
         raise Invalid(_('Passwords must be strings.'))
     elif value == '':
         pass  # Already handeled in core
