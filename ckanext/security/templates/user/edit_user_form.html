@@ -52,14 +52,16 @@
     {{ form.input('password2', type='password', label=_('Confirm Password'), id='field-password-confirm', value=data.password2, error=errors.password2, classes=['control-medium'], attrs={'autocomplete': 'off', 'class': 'form-control'}) }}
   </fieldset>
 
-  <fieldset>
-    <legend>{{_('Two factor authentication')}}</legend>
-    {% if h.check_ckan_version('2.9') %}
-      {% link_for _('Manage two factor authentication'), controller='mfa_user', action='configure_mfa', id=data.id, class_='btn btn-default pull-left', icon='cog' %}
-    {% else %}
-      {% link_for _('Manage two factor authentication'), controller='ckanext.security.controllers:MFAUserController', action='configure_mfa', id=data.id, class_='btn btn-default pull-left', icon='cog' %}
-    {% endif %}
-  </fieldset>
+  {% if h.security_enable_totp() %}
+    <fieldset>
+      <legend>{{_('Two factor authentication')}}</legend>
+      {% if h.check_ckan_version('2.9') %}
+        {% link_for _('Manage two factor authentication'), controller='mfa_user', action='configure_mfa', id=data.id, class_='btn btn-default pull-left', icon='cog' %}
+      {% else %}
+        {% link_for _('Manage two factor authentication'), controller='ckanext.security.controllers:MFAUserController', action='configure_mfa', id=data.id, class_='btn btn-default pull-left', icon='cog' %}
+      {% endif %}
+    </fieldset>
+  {% endif %}
 
   <div class="form-actions">
     {% block delete_button %}
