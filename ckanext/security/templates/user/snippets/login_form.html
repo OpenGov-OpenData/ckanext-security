@@ -8,11 +8,13 @@ overrides rendering of the login form
 {% set username_error = true if error_summary %}
 {% set password_error = true if error_summary %}
 
-{% if h.check_ckan_version('2.9') %}
-  {% asset 'security/mfa_login' %}
-{% else %}
-  {% resource 'security/login_ajax.js' %}
-  {% resource 'security/qrious.js' %}
+{% if h.security_enable_totp() %}
+  {% if h.check_ckan_version('2.9') %}
+    {% asset 'security/mfa_login' %}
+  {% else %}
+    {% resource 'security/login_ajax.js' %}
+    {% resource 'security/qrious.js' %}
+  {% endif %}
 {% endif %}
 
 
@@ -43,6 +45,7 @@ overrides rendering of the login form
     </div>
   </div>
 
+  {% if h.security_enable_totp() %}
   <div id="mfa-form" style="display: none;">
     <fieldset id="mfa-setup" style="display: none;">
       <legend>{{_('Scan this QR code with your two factor authentication app')}}</legend>
@@ -65,5 +68,6 @@ overrides rendering of the login form
       <button class="btn btn-primary" type="submit">{{ _('Submit') }}</button>
     </div>
   </div>
+  {% endif %}
 
 </form>
