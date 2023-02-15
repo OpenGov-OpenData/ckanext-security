@@ -58,7 +58,12 @@ def user_about_validator(key, data, errors, context):
     else:
         pass
 
-invalid_list = ['hack', 'malware', 'virus']
+invalid_list = [
+    'activity', 'delete', 'edit', 'follow', 'followers', 'generate_key', 'hack',
+    'login', 'logged_in', 'logged_out', 'logged_out_redirect',
+    'malware', 'me', 'register', 'reset', 'set_lang', 'unfollow', 'virus',
+    '_logout',
+]
 def is_input_valid(input_value):
     value = input_value.lower()
     pf = ProfanityFilter()
