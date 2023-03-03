@@ -38,30 +38,31 @@ def user_password_validator(key, data, errors, context):
 
 
 def old_username_validator(key, data, errors, context):
-    # Completely prevents changing of user names
-    old_user = authz._get_user(context.get('user'))
+    # Prevents changing of user names
+    user_id = data.get(('id',))
+    old_user = context['model'].User.get(user_id)
+    new_user_name = data[key]
+    if old_user.name != new_user_name and not authz.is_sysadmin(context.get('user')):
+        raise Invalid(_('Unauthorized to change user name'))
     return old_user.name
+
 
 def user_name_sanitize(key, data, errors, context):
     value = data[key]
     if is_input_valid(value) is False:
         raise Invalid(_('Input Contains Invalid Text'))
     elif value and re.match('admin', value, re.IGNORECASE):
-        raise Invalid(_('Input Contains Invalid Text'))
-    else:
-        pass
+        raise Invalid(_('Input contains invalid text'))
+    elif value and re.match('edit', value, re.IGNORECASE):
+        raise Invalid(_('Input contains invalid text'))
+    elif value and re.match('me', value, re.IGNORECASE):
+        raise Invalid(_('Input contains invalid text'))
 
-def user_about_validator(key, data, errors, context):
-    value = data[key]
-    if is_input_valid(value) is False:
-        raise Invalid(_('Input Contains Invalid Text'))
-    else:
-        pass
 
 invalid_list = [
-    'activity', 'delete', 'edit', 'follow', 'followers', 'generate_key', 'hack',
+    'activity', 'delete', 'follow', 'followers', 'generate_key', 'hack',
     'login', 'logged_in', 'logged_out', 'logged_out_redirect',
-    'malware', 'me', 'register', 'reset', 'set_lang', 'unfollow', 'virus',
+    'malware', 'register', 'reset', 'set_lang', 'unfollow', 'virus',
     '_logout',
 ]
 def is_input_valid(input_value):

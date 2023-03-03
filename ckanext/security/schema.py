@@ -17,13 +17,14 @@ from ckanext.security import validators
 def default_user_schema():
     schema = {
         'id': [ignore_missing, unicode],
-        'name': [not_empty, name_validator, user_name_validator, validators.user_name_sanitize, unicode],
+        'name': [not_empty, name_validator, user_name_validator,
+                 validators.user_name_sanitize, unicode],
         'fullname': [ignore_missing, validators.user_name_sanitize, unicode],
         'password': [validators.user_password_validator, user_password_not_empty,
                      ignore_missing, unicode],
         'password_hash': [ignore_missing, ignore_not_sysadmin, unicode],
         'email': [not_empty, unicode],
-        'about': [ignore_missing, user_about_validator, validators.user_about_validator , unicode],
+        'about': [ignore_missing, user_about_validator, unicode],
         'created': [ignore],
         'openid': [ignore_missing],
         'sysadmin': [ignore_missing, ignore_not_sysadmin],
