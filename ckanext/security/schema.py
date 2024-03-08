@@ -22,7 +22,7 @@ def default_user_schema():
         'name': [not_empty, name_validator, user_name_validator,
                  validators.user_name_sanitize,
                  six.text_type],
-        'fullname': [ignore_missing, validators.user_name_sanitize,
+        'fullname': [ignore_missing, validators.user_fullname_sanitize,
                      six.text_type],
         'password': [validators.user_password_validator,
                      user_password_not_empty,
