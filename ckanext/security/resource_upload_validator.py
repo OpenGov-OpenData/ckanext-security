@@ -2,6 +2,7 @@ import mimetypes
 import magic
 import logging
 import os
+from werkzeug.datastructures import FileStorage
 from cgi import FieldStorage
 
 from ckan.logic import ValidationError
@@ -73,10 +74,7 @@ def _build_mimetypes_and_extensions(filename, file_content):
 
 def _has_upload(resource):
     if is_flask_request():
-        if 'upload' in tk.request.files:
-            return tk.request.files['upload'].filename != ''
-        else:
-            return False
+        return isinstance(resource.get('upload'), FileStorage)
     else:
         return isinstance(resource.get('upload'), FieldStorage)
 
