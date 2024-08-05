@@ -1,7 +1,7 @@
 from builtins import object
 import logging
 
-from ckan.lib.authenticator import default_authenticate
+from ckan.lib.authenticator import UsernamePasswordAuthenticator
 from ckan.model import User
 from ckan.common import config
 import ckan.plugins as p
@@ -67,7 +67,7 @@ def authenticate(identity):
 
     # Run through the CKAN auth sequence first, so we can hit the DB
     # in every case and make timing attacks a little more difficult.
-    ckan_auth_result = default_authenticate(identity)
+    ckan_auth_result = UsernamePasswordAuthenticator.authenticate(identity=identity)
     try:
         user_name = identity['login']
     except KeyError:
