@@ -6,17 +6,12 @@ from ckan.plugins import toolkit as tk
 from ckan.logic import schema as core_schema
 from ckanext.security.model import define_security_tables
 from ckanext.security.resource_upload_validator import (
-    validate_upload_type, validate_upload_presence
+    validate_upload
 )
 from ckanext.security.logic import auth, action
 from ckanext.security.helpers import security_enable_totp
 
-try:
-    tk.requires_ckan_version("2.9")
-except tk.CkanVersionException:
-    from ckanext.security.plugin.pylons_plugin import MixinPlugin
-else:
-    from ckanext.security.plugin.flask_plugin import MixinPlugin
+from ckanext.security.plugin.flask_plugin import MixinPlugin
 
 log = logging.getLogger(__name__)
 
@@ -53,15 +48,19 @@ class CkanSecurityPlugin(MixinPlugin, p.SingletonPlugin):
 
     # BEGIN Hooks for IResourceController
 
+    # CKAN < 2.10
     def before_create(self, context, resource):
-        validate_upload_presence(resource)
-        validate_upload_type(resource)
-        pass
+        validate_upload(resource)
 
     def before_update(self, context, current, resource):
-        validate_upload_presence(resource)
-        validate_upload_type(resource)
-        pass
+        validate_upload(resource)
+
+    # CKAN >= 2.10
+    def before_resource_create(self, context, resource):
+        validate_upload(resource)
+
+    def before_resource_update(self, context, current, resource):
+        validate_upload(resource)
 
     # END Hooks for IResourceController
 

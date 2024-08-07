@@ -5,10 +5,13 @@ import six
 from ckan.lib.navl.validators import ignore_missing, not_empty, ignore
 from ckan.logic.validators import (
     name_validator, user_name_validator, user_password_not_empty,
-    user_passwords_match, ignore_not_sysadmin, user_about_validator,
+    user_passwords_match, ignore_not_sysadmin,
     user_both_passwords_entered
 )
-from ckanext.security import validators
+from ckanext.security.validators import (
+    user_password_validator, old_username_validator, ensure_str,
+    user_name_sanitize, user_fullname_sanitize, user_about_validator
+)
 
 # The main purpose of this file is to modify CKAN's user-related schemas, and
 # to replace the default password validators everywhere. We are also replacing
@@ -18,21 +21,17 @@ from ckanext.security import validators
 
 def default_user_schema():
     schema = {
-        'id': [ignore_missing, six.text_type],
+        'id': [ignore_missing, ensure_str],
         'name': [not_empty, name_validator, user_name_validator,
-                 validators.user_name_sanitize,
-                 six.text_type],
-        'fullname': [ignore_missing, validators.user_fullname_sanitize,
-                     six.text_type],
-        'password': [validators.user_password_validator,
+                 ensure_str, user_name_sanitize],
+        'fullname': [ignore_missing, ensure_str, user_fullname_sanitize],
+        'password': [user_password_validator,
                      user_password_not_empty,
-                     ignore_missing, six.text_type],
+                     ignore_missing, ensure_str],
         'password_hash': [ignore_missing, ignore_not_sysadmin,
-                          six.text_type],
-        'email': [not_empty, six.text_type],
-        'about': [ignore_missing, user_about_validator,
-                  validators.user_about_validator,
-                  six.text_type],
+                          ensure_str],
+        'email': [not_empty, ensure_str],
+        'about': [ignore_missing, user_about_validator, ensure_str],
         'created': [ignore],
         'openid': [ignore_missing],
         'sysadmin': [ignore_missing, ignore_not_sysadmin],
@@ -47,10 +46,10 @@ def default_user_schema():
 def user_new_form_schema():
     schema = default_user_schema()
 
-    schema['password1'] = [six.text_type, user_both_passwords_entered,
-                           validators.user_password_validator,
+    schema['password1'] = [ensure_str, user_both_passwords_entered,
+                           user_password_validator,
                            user_passwords_match]
-    schema['password2'] = [six.text_type]
+    schema['password2'] = [ensure_str]
 
     return schema
 
@@ -58,12 +57,12 @@ def user_new_form_schema():
 def user_edit_form_schema():
     schema = default_user_schema()
 
-    schema['name'] += [validators.old_username_validator]
+    schema['name'] += [old_username_validator]
     schema['password'] = [ignore_missing]
-    schema['password1'] = [ignore_missing, six.text_type,
-                           validators.user_password_validator,
+    schema['password1'] = [ignore_missing, ensure_str,
+                           user_password_validator,
                            user_passwords_match]
-    schema['password2'] = [ignore_missing, six.text_type]
+    schema['password2'] = [ignore_missing, ensure_str]
 
     return schema
 
@@ -72,8 +71,8 @@ def default_update_user_schema():
     schema = default_user_schema()
 
     schema['name'] = [ignore_missing, name_validator, user_name_validator,
-                      six.text_type]
-    schema['password'] = [validators.user_password_validator,
-                          ignore_missing, six.text_type]
+                      ensure_str]
+    schema['password'] = [user_password_validator,
+                          ignore_missing, ensure_str]
 
     return schema

@@ -1,16 +1,11 @@
 from builtins import object
 import logging
-import six
-
-if six.PY2:
-    import pylons
-    from ckan.lib.cli import MockTranslator
 
 from ckan.lib.authenticator import UsernamePasswordAuthenticator
 from ckan.model import User
 from ckan.common import config
-from webob.request import Request
 import ckan.plugins as p
+from ckan.plugins.toolkit import request
 from ckanext.security.cache.login import LoginThrottle
 from ckanext.security.helpers import security_enable_totp
 from ckanext.security.model import SecurityTOTP, ReplayAttackException
@@ -65,46 +60,33 @@ def reset_totp(user_name):
     SecurityTOTP.create_for_user(user_name)
 
 
-class CKANLoginThrottle(UsernamePasswordAuthenticator):
-    p.implements(p.IAuthenticator)
+def authenticate(identity):
+    """A username/password authenticator that throttles login request
+    by user name, ie only a limited number of attempts can be made
+    to log into a specific account within a period of time."""
 
-    def authenticate(self, environ, identity):
-        """A username/password authenticator that throttles login request
-        by user name, ie only a limited number of attempts can be made
-        to log into a specific account within a period of time."""
-        try:
-            user_name = identity['login']
-        except KeyError:
-            return None
+    # Run through the CKAN auth sequence first, so we can hit the DB
+    # in every case and make timing attacks a little more difficult.
+    ckan_auth_result = UsernamePasswordAuthenticator.authenticate(identity=identity)
+    try:
+        user_name = identity['login']
+    except KeyError:
+        return None
 
-        if six.PY2:
-            # TODO: This may need to be removed in CKAN 3+ when
-            # paste/pylons are removed
-            environ['paste.registry'].register(
-                pylons.translator, MockTranslator())
+    login_throttle_key = get_login_throttle_key(
+        request, user_name)
+    if login_throttle_key is None:
+        return None
 
-        if not ('login' in identity and 'password' in identity):
-            return None
+    throttle = LoginThrottle(User.by_name(user_name), login_throttle_key)
+    # Check if there is a lock on the requested user, and return None if
+    # we have a lock.
+    if throttle.is_locked():
+        return None
 
-        # Run through the CKAN auth sequence first, so we can hit the DB
-        # in every case and make timing attacks a little more difficult.
-        auth_user_name = super(CKANLoginThrottle, self).authenticate(
-            environ, identity)
-
-        login_throttle_key = get_login_throttle_key(
-            Request(environ), user_name)
-        if login_throttle_key is None:
-            return None
-
-        throttle = LoginThrottle(User.by_name(user_name), login_throttle_key)
-        # Check if there is a lock on the requested user, and return None if
-        # we have a lock.
-        if throttle.is_locked():
-            return None
-
-        if auth_user_name is None:
-            # Increment the throttle counter if the login failed.
-            throttle.increment()
+    if ckan_auth_result is None:
+        # Increment the throttle counter if the login failed.
+        throttle.increment()
 
         # totp authentication is enabled by default for all users
         # totp can be disabled, if needed, by setting
@@ -112,42 +94,49 @@ class CKANLoginThrottle(UsernamePasswordAuthenticator):
         if not security_enable_totp():
             throttle.reset()
             return auth_user_name
-        
-        # if the CKAN authenticator has successfully authenticated
-        # the request and the user wasn't locked out above,
-        # then check the TOTP parameter to see if it is valid
-        if auth_user_name is not None:
-            totp_success = self.authenticate_totp(environ, auth_user_name)
-            # if TOTP was successful -- reset the log in throttle
-            if totp_success:
-                throttle.reset()
-                return totp_success
 
-    def authenticate_totp(self, environ, auth_user):
-        totp_challenger = SecurityTOTP.get_for_user(auth_user)
+    # if the CKAN authenticator has successfully authenticated
+    # the request and the user wasn't locked out above,
+    # then check the TOTP parameter to see if it is valid
+    if ckan_auth_result is not None:
+        totp_success = authenticate_totp(user_name)
+        # if TOTP was successful -- reset the log in throttle
+        if totp_success:
+            throttle.reset()
+            return ckan_auth_result
 
-        # if there is no totp configured, don't allow auth
-        # shouldn't happen, login flow should create a totp_challenger
-        if totp_challenger is None:
-            log.info("Login attempted without MFA configured for: %s",
-                     auth_user)
-            return None
 
-        request = Request(environ, charset='utf-8')
-        if not ('mfa' in request.POST):
-            log.info("Could not get MFA credentials from the request")
-            return None
+def authenticate_totp(auth_user):
+    totp_challenger = SecurityTOTP.get_for_user(auth_user)
 
-        try:
-            result = totp_challenger.check_code(request.POST['mfa'])
-        except ReplayAttackException as e:
-            log.warning(
-                "Detected a possible replay attack for user: %s, context: %s",
-                auth_user, e)
-            return None
+    # if there is no totp configured, don't allow auth
+    # shouldn't happen, login flow should create a totp_challenger
+    if totp_challenger is None:
+        log.info("Login attempted without MFA configured for: %s",
+                    auth_user)
+        return None
 
-        if result:
-            return auth_user
+    if not ('mfa' in request.form):
+        log.info("Could not get MFA credentials from the request")
+        return None
+
+    try:
+        result = totp_challenger.check_code(request.form['mfa'])
+    except ReplayAttackException as e:
+        log.warning(
+            "Detected a possible replay attack for user: %s, context: %s",
+            auth_user, e)
+        return None
+
+    if result:
+        return auth_user
+
+
+class CKANLoginThrottle():
+    p.implements(p.IAuthenticator)
+
+    def authenticate(self, environ, identity):
+        return authenticate(identity)
 
 
 class BeakerRedisAuth(object):

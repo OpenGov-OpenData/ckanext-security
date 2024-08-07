@@ -43,12 +43,18 @@ def old_username_validator(key, data, errors, context):
     old_user = authz._get_user(context.get('user'))
     return old_user.name
 
+
+def ensure_str(value):
+    return six.text_type(value)
+
+
 def user_name_sanitize(key, data, errors, context):
     value = data[key]
     if is_input_valid(value) is False:
         raise Invalid(_('Input Contains Invalid Text'))
     elif value and re.match('admin', value, re.IGNORECASE):
         raise Invalid(_('Input Contains Invalid Text'))
+
 
 def user_fullname_sanitize(key, data, errors, context):
     value = data[key]
@@ -57,12 +63,14 @@ def user_fullname_sanitize(key, data, errors, context):
     elif is_input_valid(value) is False:
         raise Invalid(_('Input Contains Invalid Text'))
 
+
 def user_about_validator(key, data, errors, context):
     value = data[key]
     if len(value) > 100:
         raise Invalid(_('Input exceeds maximum length of 100 characters'))
     elif is_input_valid(value) is False:
         raise Invalid(_('Input Contains Invalid Text'))
+
 
 invalid_list = ['cocaine', 'casino', 'hack', 'http', 'malware', 'virus', 'obat']
 def is_input_valid(input_value):

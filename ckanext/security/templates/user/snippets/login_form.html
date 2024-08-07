@@ -9,14 +9,8 @@ overrides rendering of the login form
 {% set password_error = true if error_summary %}
 
 {% if h.security_enable_totp() %}
-  {% if h.check_ckan_version('2.9') %}
     {% asset 'security/mfa_login' %}
-  {% else %}
-    {% resource 'security/login_ajax.js' %}
-    {% resource 'security/qrious.js' %}
-  {% endif %}
 {% endif %}
-
 
 <form id="mfa-login-form" action="{{ action }}" method="post" class="form-horizontal">
   <div class="error-explanation alert alert-error" style="display: none;">
