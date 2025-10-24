@@ -57,6 +57,7 @@ def _build_mimetypes_and_extensions(filename, file_content):
 
         if mimetype:
             extensions_and_mimetypes.append(mimetype)
+            log.info('Initial detected mimetype: %s', mimetype)
 
             # 'text/plain' returns '.bat' extension, if this is blacklisted then
             # any text files are blocked. Assume text files are ok.
