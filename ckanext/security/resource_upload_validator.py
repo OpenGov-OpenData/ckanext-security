@@ -61,8 +61,8 @@ def _build_mimetypes_and_extensions(filename, file_content):
 
             # 'text/plain' returns '.bat' extension, if this is blacklisted then
             # any text files are blocked. Assume text files are ok.
-            # Also assume application/zip files are ok.
-            if mimetype not in ['text/plain', 'application/zip']:
+            # Also assume zip files are ok (identified by mimetype or extension).
+            if mimetype not in ['text/plain', 'application/zip'] and '.zip' not in extensions_and_mimetypes:
                 # build set of possible extensions for the mimetype
                 nonstandard_extensions = mimes_instance.types_map_inv[0].get(
                     mimetype, [])
