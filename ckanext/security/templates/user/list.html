@@ -1,20 +1,20 @@
 {% ckan_extends %}
 
-{% block pre_primary %}
+{% block primary %}
   {% if not c.userobj %}
-    <section class="module-content">
-      <p><a href="/user/login">Login</a> to view user list</p>
+    <section class="module" role="main">
+      <div class="module-content">
+        <h1>Users</h1>
+        <p><a href="/user/login">Login</a> to view user list</p>
+      </div>
     </section>
   {% endif %}
-{% endblock %}
-
-{% block primary_content %}
   {% if c.userobj %}
     {{ super() }}
   {% endif %}
 {% endblock %}
 
-{% block secondary_content %}
+{% block secondary %}
   {% if c.userobj %}
     {{ super() }}
   {% endif %}
